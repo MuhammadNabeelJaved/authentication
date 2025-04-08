@@ -8,10 +8,11 @@ import sendEmail from "../utils/sendEail.js";
 
 dotenv.config();
 
-
 const register = asyncHandler(async (req, res) => {
     try {
         const { username, email, password } = req.body;
+
+        // Validation checks
         if (!username || !email || !password) {
             throw new ApiError("All fields are required", 400);
         } else if (!email) {
@@ -22,6 +23,7 @@ const register = asyncHandler(async (req, res) => {
             throw new ApiError("Username is required", 400);
         }
 
+        // Check if user already exists
         const existingUser = await User.findOne({
             $or: [{ email }, { username }],
         });
@@ -30,75 +32,81 @@ const register = asyncHandler(async (req, res) => {
             throw new ApiError("User already exists", 400);
         }
 
+        // Create new user
         const newUser = await User.create({
             username,
             email,
             password,
-        })
+        });
 
         if (!newUser) {
             throw new ApiError("User registration failed", 500);
         }
 
-        const code = newUser.generateVerificationCode();
+        // Generate OTP
+        const otp = newUser.generateVerificationCode();
 
-        if (!code) {
+        if (!otp) {
             throw new ApiError("Failed to generate verification code", 500);
         }
 
         // Send verification email with code
-        const emailSent = await sendEmail(email, "Verification Code", code)
+        const emailSent = await sendEmail(email, "Verification Code", otp);
 
         if (!emailSent) {
             throw new ApiError("Failed to send verification email", 500);
         }
 
+        // Return user without sensitive information
         const user = await User.findOne({ _id: newUser._id }).select("-password -refreshToken -verificationCode -verificationCodeExpiry");
 
         return res.status(200).json(
             new ApiResponse(
                 200,
                 "User registered successfully",
-                user,
+                user
             )
-
-        )
-
+        );
 
     } catch (error) {
-        return new ApiError(res, error.message, error.statusCode || 500);
+        // Using ApiError for error handling
+        throw new ApiError(error.message || "Something went wrong", error.statusCode || 500);
     }
-
-})
+});
 
 const verifyAccount = asyncHandler(async (req, res) => {
     try {
         const { code } = req.body;
+
         if (!code) {
             throw new ApiError("Verification code is required", 400);
         }
+
         const user = await User.findOne({
             verificationCode: code,
             verificationCodeExpiry: { $gt: Date.now() },
         }).select("-password");
+
         if (!user) {
             throw new ApiError("Invalid or expired verification code", 400);
         }
+
         user.isVerified = true;
         user.verificationCode = null;
         user.verificationCodeExpiry = null;
         await user.save({ validateBeforeSave: false });
 
         return res.status(200).json(
-            ApiResponse.success(
+            new ApiResponse(
                 200,
                 "Account verified successfully",
-                user,
+                user
             )
-        )
+        );
     } catch (error) {
-        return ApiResponse.error(res, error.message, error.statusCode || 500);
+        // Using ApiError for error handling
+        throw new ApiError(error.message || "Something went wrong", error.statusCode || 500);
     }
-})
+});
 
 export { register, verifyAccount };
