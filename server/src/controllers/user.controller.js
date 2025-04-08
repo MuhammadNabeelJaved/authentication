@@ -1,7 +1,12 @@
+import dotenv from "dotenv";
+import jwt from "jsonwebtoken";
 import User from "../models/user.model.js";
 import ApiError from "../utils/apiError.js";
 import ApiResponse from "../utils/apiResponse.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
+import sendEmail from "../utils/sendEail.js";
+
+dotenv.config();
 
 
 const register = asyncHandler(async (req, res) => {
@@ -34,6 +39,12 @@ const register = asyncHandler(async (req, res) => {
         if (!user) {
             throw new ApiError("User registration failed", 500);
         }
+
+        const code = user.generateVerificationCode();
+
+        await user.save({ validateBeforeSave: false });
+
+        // Send verification email with code
 
 
 

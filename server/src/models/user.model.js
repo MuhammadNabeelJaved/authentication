@@ -73,13 +73,17 @@ userSchema.methods.isVerificationCodeValid = function (code) {
 }
 
 userSchema.methods.generateRefreshToken = function () {
-    const refreshToken = jwt.sign({ id: this._id }, process.env.JWT_REFRESH_SECRET, { expiresIn: process.env.JWT_REFRESH_TOKEN_EXPIRATION || "10d" });
+    const refreshToken = jwt.sign({ id: this._id },
+        process.env.JWT_REFRESH_SECRET,
+        { expiresIn: process.env.JWT_REFRESH_TOKEN_EXPIRATION || "10d" });
     this.refreshToken = refreshToken;
     return refreshToken;
 }
 
 userSchema.methods.generateAccessToken = function () {
-    const accessToken = jwt.sign({ id: this._id }, process.env.JWT_ACCESS_TOKEN_SECRET, { expiresIn: process.env.JWT_ACCESS_TOKEN_EXPIRATION || '1h' });
+    const accessToken = jwt.sign({ id: this._id },
+        process.env.JWT_ACCESS_TOKEN_SECRET,
+        { expiresIn: process.env.JWT_ACCESS_TOKEN_EXPIRATION || '1h' });
     return accessToken;
 }
 
