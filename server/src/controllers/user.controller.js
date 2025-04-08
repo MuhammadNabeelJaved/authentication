@@ -30,7 +30,7 @@ const register = asyncHandler(async (req, res) => {
             throw new ApiError("User already exists", 400);
         }
 
-        const newUser = User.create({
+        const newUser = await User.create({
             username,
             email,
             password,
@@ -56,7 +56,7 @@ const register = asyncHandler(async (req, res) => {
         const user = await User.findOne({ _id: newUser._id }).select("-password -refreshToken -verificationCode -verificationCodeExpiry");
 
         return res.status(200).json(
-            ApiResponse.success(
+            new ApiResponse(
                 200,
                 "User registered successfully",
                 user,
@@ -66,7 +66,39 @@ const register = asyncHandler(async (req, res) => {
 
 
     } catch (error) {
-        return ApiResponse.error(res, error.message, error.statusCode || 500);
+        return new ApiError(res, error.message, error.statusCode || 500);
     }
 
 })
+
+const verifyAccount = asyncHandler(async (req, res) => {
+    try {
+        const { code } = req.body;
+        if (!code) {
+            throw new ApiError("Verification code is required", 400);
+        }
+        const user = await User.findOne({
+            verificationCode: code,
+            verificationCodeExpiry: { $gt: Date.now() },
+        }).select("-password");
+        if (!user) {
+            throw new ApiError("Invalid or expired verification code", 400);
+        }
+        user.isVerified = true;
+        user.verificationCode = null;
+        user.verificationCodeExpiry = null;
+        await user.save({ validateBeforeSave: false });
+
+        return res.status(200).json(
+            ApiResponse.success(
+                200,
+                "Account verified successfully",
+                user,
+            )
+        )
+    } catch (error) {
+        return ApiResponse.error(res, error.message, error.statusCode || 500);
+    }
+})
+
+export { register, verifyAccount };
