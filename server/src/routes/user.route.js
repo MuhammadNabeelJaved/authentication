@@ -5,6 +5,6 @@ import { register, verifyAccount } from "../controllers/user.controller.js"
 const router = Router()
 
 router.route("/signup").post(register)
-// router.route("/login").post(loginUser)
+router.route("/verify-account").post(verifyAccount)
 
 export default router

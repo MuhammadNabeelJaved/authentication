@@ -46,6 +46,8 @@ const register = asyncHandler(async (req, res) => {
         // Generate OTP
         const otp = newUser.generateVerificationCode();
 
+        await newUser.save({ validateBeforeSave: false });
+
         if (!otp) {
             throw new ApiError("Failed to generate verification code", 500);
         }
