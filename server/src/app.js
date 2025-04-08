@@ -1,10 +1,8 @@
 import dotenv from 'dotenv';
 import express from 'express';
-import mongoose from 'mongoose';
 import cors from 'cors';
 import bodyParser from 'body-parser';
 import cookieParser from 'cookie-parser';
-import { connectDB } from './database/database.js';
 
 dotenv.config();
 const app = express();
