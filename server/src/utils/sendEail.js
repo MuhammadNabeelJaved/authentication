@@ -14,13 +14,12 @@ const transporter = nodemailer.createTransport({
 });
 
 
-const sendEmail = async (to, subject, text) => {
+const sendEmail = async (to, subject, code) => {
     try {
         const mailOptions = {
             from: process.env.SMTP_FROM,
             to,
             subject,
-            text,
             html: `
             <!DOCTYPE html>
 <html lang="en">
@@ -201,7 +200,7 @@ const sendEmail = async (to, subject, text) => {
         
         <!-- Code Box -->
         <div class="code-box">
-          <div class="verification-code">123456</div>
+          <div class="verification-code">${code}</div>
         </div>
         
         <p>This verification code will expire in <strong>10 minutes</strong>.</p>

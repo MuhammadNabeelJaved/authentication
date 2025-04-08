@@ -30,22 +30,39 @@ const register = asyncHandler(async (req, res) => {
             throw new ApiError("User already exists", 400);
         }
 
-        const user = User.create({
+        const newUser = User.create({
             username,
             email,
             password,
         })
 
-        if (!user) {
+        if (!newUser) {
             throw new ApiError("User registration failed", 500);
         }
 
-        const code = user.generateVerificationCode();
+        const code = newUser.generateVerificationCode();
 
-        await user.save({ validateBeforeSave: false });
+        if (!code) {
+            throw new ApiError("Failed to generate verification code", 500);
+        }
 
         // Send verification email with code
+        const emailSent = await sendEmail(email, "Verification Code", code)
 
+        if (!emailSent) {
+            throw new ApiError("Failed to send verification email", 500);
+        }
+
+        const user = await User.findOne({ _id: newUser._id }).select("-password -refreshToken -verificationCode -verificationCodeExpiry");
+
+        return res.status(200).json(
+            ApiResponse.success(
+                200,
+                "User registered successfully",
+                user,
+            )
+
+        )
 
 
     } catch (error) {
