@@ -1,6 +1,6 @@
 import dotenv from "dotenv"
 import nodemailer from "nodemailer"
-import { ApiError } from "./apiError.js"
+import {ApiError} from "../utils/apiError.js"
 
 dotenv.config()
 

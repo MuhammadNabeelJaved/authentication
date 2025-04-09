@@ -143,7 +143,7 @@ const verifyAccount = asyncHandler(async (req, res) => {
 const login = asyncHandler(async (req, res) => {
     const { email, password } = req.body;
     if (!email || !password) {
-        throw new ApiError(400, "Email and password are required");
+        throw new ApiError(402, "Email and password are required");
     }
     try {
         const user = await User.findOne({ email });
@@ -181,7 +181,7 @@ const login = asyncHandler(async (req, res) => {
         return apiResponse(res, { statusCode: 200, data: user, message: "Login successfully" }, accessToken, refreshToken);
 
     } catch (error) {
-        throw new ApiError(error.message);
+        throw new ApiError(error.statusCode || 500, error.message || "Something went wrong");
     }
 });
 

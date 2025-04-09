@@ -19,8 +19,11 @@ app.use(cookieParser());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+import errorHandler from "./middlewares/errorHandler.js"
 import userRouter from "./routes/user.route.js";
 
 app.use("/api/v1/users", userRouter)
+
+// app.use(errorHandler)
 
 export default app;
