@@ -1,8 +1,8 @@
 import dotenv from "dotenv";
 import jwt from "jsonwebtoken";
 import User from "../models/user.model.js";
-import ApiError from "../utils/apiError.js";
-import ApiResponse from "../utils/apiResponse.js";
+import { ApiError } from "../utils/apiError.js";
+import { apiResponse } from "../utils/apiResponse.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import sendEmail from "../utils/sendEail.js";
 
@@ -84,17 +84,11 @@ const register = asyncHandler(async (req, res) => {
         // Return user without sensitive information
         const user = await User.findOne({ _id: newUser._id }).select("-password -refreshToken -verificationCode -verificationCodeExpiry");
 
-        return res.status(200).json(
-            new ApiResponse(
-                200,
-                "User registered successfully",
-                user
-            )
-        );
+        return apiResponse(res, { statusCode: 200, data: user, message: "User registered successfully. Please check your email for verification code." })
 
     } catch (error) {
         // Using ApiError for error handling
-        throw new ApiError(500 || error.message);
+        throw new ApiError(500, error.message || "Something went wrong", error, error.stack);
     }
 });
 
@@ -135,16 +129,13 @@ const verifyAccount = asyncHandler(async (req, res) => {
             secure: true,
         }
 
-        return res.status(200).cookie("refreshToken", refreshToken, options).cookie("accessToken", accessToken, options).json(
-            new ApiResponse(
-                200,
-                "Account verified successfully",
-                user
-            )
-        );
+        res.cookie("refreshToken", refreshToken, options)
+        res.cookie("accessToken", accessToken, options)
+
+        return apiResponse(res, { statusCode: 200, data: user, message: "Account verified successfully" }, accessToken, refreshToken);
     } catch (error) {
         // Using ApiError for error handling
-        throw new ApiError(500 || error.message);
+        throw new ApiError(error.statusCode || 500, error.message || "Something went wrong");
     }
 });
 
@@ -184,17 +175,13 @@ const login = asyncHandler(async (req, res) => {
             httpOnly: true,
             secure: true,
         }
+        res.cookie("refreshToken", refreshToken, options)
+        res.cookie("accessToken", accessToken, options)
 
-        return res.status(200).cookie("refreshToken", refreshToken, options).cookie("accessToken", accessToken, options).json(
-            new ApiResponse(
-                200,
-                "Login successful",
-                user
-            )
-        )
+        return apiResponse(res, { statusCode: 200, data: user, message: "Login successfully" }, accessToken, refreshToken);
 
     } catch (error) {
-        throw new ApiError(500 || error.message);
+        throw new ApiError(error.message);
     }
 });
 

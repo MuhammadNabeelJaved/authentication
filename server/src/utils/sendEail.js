@@ -1,8 +1,11 @@
 import dotenv from "dotenv"
 import nodemailer from "nodemailer"
+import { ApiError } from "./apiError.js"
 
 dotenv.config()
 
+console.log("Email:", process.env.EMAIL)
+console.log("Password:", process.env.PASSWORD)
 const transporter = nodemailer.createTransport({
   host: "smtp.gmail.com",
   port: 465,
