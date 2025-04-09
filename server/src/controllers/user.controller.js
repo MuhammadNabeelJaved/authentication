@@ -24,7 +24,7 @@ const genrateAccessAndRefreshToken = async (userId) => {
         await user.save({ validateBeforeSave: false });
         return { accessToken, refreshToken };
     } catch (error) {
-        throw new ApiError(error.message || "Error occured during genrating access and refresh tokens", error.statusCode || 500);
+        throw new ApiError(500 || error.message);
     }
 }
 
@@ -32,15 +32,17 @@ const register = asyncHandler(async (req, res) => {
     try {
         const { username, email, password } = req.body;
 
+        console.log("Registering user:", { username, email, password });
+
         // Validation checks
         if (!username || !email || !password) {
-            throw new ApiError("All fields are required", 400);
+            throw new ApiError(400, "All fields are required");
         } else if (!email) {
-            throw new ApiError("Email is required", 400);
+            throw new ApiError(400, "Email is required");
         } else if (!password) {
-            throw new ApiError("Password is required", 400);
+            throw new ApiError(400, "Password is required");
         } else if (!username) {
-            throw new ApiError("Username is required", 400);
+            throw new ApiError(400, "Username is required");
         }
 
         // Check if user already exists
@@ -49,7 +51,7 @@ const register = asyncHandler(async (req, res) => {
         });
 
         if (existingUser) {
-            throw new ApiError("User already exists", 400);
+            throw new ApiError(400, "User already exists");
         }
 
         // Create new user
@@ -60,7 +62,7 @@ const register = asyncHandler(async (req, res) => {
         });
 
         if (!newUser) {
-            throw new ApiError("User registration failed", 500);
+            throw new ApiError(500, "User registration failed");
         }
 
         // Generate OTP
@@ -69,14 +71,14 @@ const register = asyncHandler(async (req, res) => {
         await newUser.save({ validateBeforeSave: false });
 
         if (!otp) {
-            throw new ApiError("Failed to generate verification code", 500);
+            throw new ApiError(500, "Failed to generate verification code");
         }
 
         // Send verification email with code
         const emailSent = await sendEmail(email, "Verification Code", otp);
 
         if (!emailSent) {
-            throw new ApiError("Failed to send verification email", 500);
+            throw new ApiError(500, "Failed to send verification email");
         }
 
         // Return user without sensitive information
@@ -92,7 +94,7 @@ const register = asyncHandler(async (req, res) => {
 
     } catch (error) {
         // Using ApiError for error handling
-        throw new ApiError(error.message || "Something went wrong", error.statusCode || 500);
+        throw new ApiError(500 || error.message);
     }
 });
 
@@ -101,7 +103,7 @@ const verifyAccount = asyncHandler(async (req, res) => {
         const { code } = req.body;
 
         if (!code) {
-            throw new ApiError("Verification code is required", 400);
+            throw new ApiError(400, "Verification code is required");
         }
 
         const user = await User.findOne({
@@ -110,7 +112,7 @@ const verifyAccount = asyncHandler(async (req, res) => {
         }).select("-password -verificationCode -verificationCodeExpiry");
 
         if (!user) {
-            throw new ApiError("Invalid or expired verification code", 400);
+            throw new ApiError(400, "Invalid or expired verification code");
         }
 
         user.isVerified = true;
@@ -122,7 +124,7 @@ const verifyAccount = asyncHandler(async (req, res) => {
         const { accessToken, refreshToken } = await genrateAccessAndRefreshToken(user._id);
 
         if (!accessToken || !refreshToken) {
-            throw new ApiError("Failed to generate tokens", 500);
+            throw new ApiError(500, "Failed to generate tokens");
         }
         user.accessToken = accessToken;
         user.refreshToken = refreshToken;
@@ -133,16 +135,16 @@ const verifyAccount = asyncHandler(async (req, res) => {
             secure: true,
         }
 
-        return res.status(200).json(
+        return res.status(200).cookie("refreshToken", refreshToken, options).cookie("accessToken", accessToken, options).json(
             new ApiResponse(
                 200,
                 "Account verified successfully",
                 user
             )
-        ).cookie("refreshToken", refreshToken, options).cookie("accessToken", accessToken, options);
+        );
     } catch (error) {
         // Using ApiError for error handling
-        throw new ApiError(error.message || "Something went wrong", error.statusCode || 500);
+        throw new ApiError(500 || error.message);
     }
 });
 
@@ -150,27 +152,27 @@ const verifyAccount = asyncHandler(async (req, res) => {
 const login = asyncHandler(async (req, res) => {
     const { email, password } = req.body;
     if (!email || !password) {
-        throw new ApiError("Email and password are required", 400);
+        throw new ApiError(400, "Email and password are required");
     }
     try {
         const user = await User.findOne({ email });
 
         if (!user) {
-            throw new ApiError("User not found", 404);
+            throw new ApiError(404, "User not found");
         }
 
         const isMatch = await user.comparePassword(password);
 
         if (!isMatch) {
-            throw new ApiError("Invalid credentials", 401);
+            throw new ApiError(401, "Invalid credentials");
         }
         if (!user.isVerified) {
-            throw new ApiError("Account not verified", 403);
+            throw new ApiError(403, "Account not verified");
         }
 
         const { accessToken, refreshToken } = await genrateAccessAndRefreshToken(user._id);
         if (!accessToken || !refreshToken) {
-            throw new ApiError("Failed to generate tokens", 500);
+            throw new ApiError(500, "Failed to generate tokens");
         }
 
         user.accessToken = accessToken;
@@ -183,18 +185,17 @@ const login = asyncHandler(async (req, res) => {
             secure: true,
         }
 
-        return res.status(200).json(
+        return res.status(200).cookie("refreshToken", refreshToken, options).cookie("accessToken", accessToken, options).json(
             new ApiResponse(
                 200,
                 "Login successful",
                 user
             )
-        ).cookie("refreshToken", refreshToken, options).cookie("accessToken", accessToken, options);
+        )
 
     } catch (error) {
-        throw new ApiError(error.message || "Something went wrong", error.statusCode || 500);
-
+        throw new ApiError(500 || error.message);
     }
 });
 
-export { register, verifyAccount };
+export { register, verifyAccount, login };

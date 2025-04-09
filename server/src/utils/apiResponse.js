@@ -1,10 +1,8 @@
-class ApiResponse {
-    constructor(status, message = "Success", data) {
-        this.status = status;
-        this.message = message;
-        this.data = data;
-        this.success = status >= 200 && status < 300;
-    }
+export const apiResponse = (res, { statusCode = 200, data = null, message = "Success" }) => {
+    return res.status(statusCode).json({
+        success: true,
+        data,
+        message,
+    })
 }
 
-export default ApiResponse;

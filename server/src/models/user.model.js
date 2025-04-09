@@ -75,7 +75,7 @@ userSchema.methods.isVerificationCodeValid = function (code) {
 
 userSchema.methods.generateRefreshToken = function () {
     const refreshToken = jwt.sign({ id: this._id },
-        process.env.JWT_REFRESH_SECRET,
+        process.env.JWT_REFRESH_TOKEN_SECRET,
         { expiresIn: process.env.JWT_REFRESH_TOKEN_EXPIRATION || "10d" });
     this.refreshToken = refreshToken;
     return refreshToken;
@@ -87,6 +87,10 @@ userSchema.methods.generateAccessToken = function () {
         { expiresIn: process.env.JWT_ACCESS_TOKEN_EXPIRATION || '1h' });
     return accessToken;
 }
+
+// console.log('Access Token Secret:', process.env.JWT_ACCESS_TOKEN_SECRET);
+// console.log('Refresh Token Secret:', process.env.JWT_REFRESH_TOKEN_SECRET);
+
 
 
 const User = model("User", userSchema);
