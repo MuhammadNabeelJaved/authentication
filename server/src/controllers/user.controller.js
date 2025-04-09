@@ -189,6 +189,8 @@ const login = asyncHandler(async (req, res) => {
 const refreshAccessToken = asyncHandler(async (req, res) => {
     const incommingToken = req.cookies.refreshToken || req.headers["x-refresh-token"].split("Bearer ")[1] || req.body.refreshToken || req.query.refreshToken;
 
+    console.log("Incomming token:", incommingToken);
+
     if (!incommingToken) {
         throw new ApiError(401, "Refresh token is required");
     }

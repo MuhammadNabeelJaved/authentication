@@ -1,10 +1,12 @@
 import dotenv from "dotenv";
 import jwt from "jsonwebtoken";
 import { ApiError } from "../utils/apiError.js";
+import User from "../models/user.model.js";
 
 
 const verifyToken = async (req, res, next) => {
     const token = req.headers["authorization"]?.split(" ")[1] || req.cookies.accessToken || req.body.accessToken || req.query.accessToken;
+    console.log("Token:", token);
     if (!token) {
         return next(new ApiError(401, "Access token is required"));
     }
@@ -18,9 +20,9 @@ const verifyToken = async (req, res, next) => {
         if (!user) {
             return next(new ApiError(404, "User not found"));
         }
-        if (user.accessToken !== token) {
-            return next(new ApiError(401, "Invalid access token"));
-        }
+        // if (user.accessToken !== token) {
+        //     return next(new ApiError(401, "Invalid access token"));
+        // }
         req.user = user;
         await user.save({ validateBeforeSave: false });
         next();
