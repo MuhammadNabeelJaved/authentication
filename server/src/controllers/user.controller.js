@@ -8,6 +8,26 @@ import sendEmail from "../utils/sendEail.js";
 
 dotenv.config();
 
+
+const genrateAccessAndRefreshToken = async (userId) => {
+
+    try {
+        const user = await User.findById(userId).select("-password -refreshToken -verificationCode -verificationCodeExpiry");
+        if (!user) {
+            throw new ApiError("User not found", 404);
+        }
+
+        const refreshToken = user.generateRefreshToken();
+        const accessToken = user.generateAccessToken();
+
+        user.refreshToken = refreshToken;
+        await user.save({ validateBeforeSave: false });
+        return { accessToken, refreshToken };
+    } catch (error) {
+        throw new ApiError(error.message || "Error occured during genrating access and refresh tokens", error.statusCode || 500);
+    }
+}
+
 const register = asyncHandler(async (req, res) => {
     try {
         const { username, email, password } = req.body;
@@ -87,7 +107,7 @@ const verifyAccount = asyncHandler(async (req, res) => {
         const user = await User.findOne({
             verificationCode: code,
             verificationCodeExpiry: { $gt: Date.now() },
-        }).select("-password");
+        }).select("-password -verificationCode -verificationCodeExpiry");
 
         if (!user) {
             throw new ApiError("Invalid or expired verification code", 400);
@@ -98,16 +118,82 @@ const verifyAccount = asyncHandler(async (req, res) => {
         user.verificationCodeExpiry = null;
         await user.save({ validateBeforeSave: false });
 
+        // Generate access and refresh tokens
+        const { accessToken, refreshToken } = await genrateAccessAndRefreshToken(user._id);
+
+        if (!accessToken || !refreshToken) {
+            throw new ApiError("Failed to generate tokens", 500);
+        }
+        user.accessToken = accessToken;
+        user.refreshToken = refreshToken;
+        await user.save({ validateBeforeSave: false });
+
+        const options = {
+            httpOnly: true,
+            secure: true,
+        }
+
         return res.status(200).json(
             new ApiResponse(
                 200,
                 "Account verified successfully",
                 user
             )
-        );
+        ).cookie("refreshToken", refreshToken, options).cookie("accessToken", accessToken, options);
     } catch (error) {
         // Using ApiError for error handling
         throw new ApiError(error.message || "Something went wrong", error.statusCode || 500);
+    }
+});
+
+
+const login = asyncHandler(async (req, res) => {
+    const { email, password } = req.body;
+    if (!email || !password) {
+        throw new ApiError("Email and password are required", 400);
+    }
+    try {
+        const user = await User.findOne({ email });
+
+        if (!user) {
+            throw new ApiError("User not found", 404);
+        }
+
+        const isMatch = await user.comparePassword(password);
+
+        if (!isMatch) {
+            throw new ApiError("Invalid credentials", 401);
+        }
+        if (!user.isVerified) {
+            throw new ApiError("Account not verified", 403);
+        }
+
+        const { accessToken, refreshToken } = await genrateAccessAndRefreshToken(user._id);
+        if (!accessToken || !refreshToken) {
+            throw new ApiError("Failed to generate tokens", 500);
+        }
+
+        user.accessToken = accessToken;
+        user.refreshToken = refreshToken;
+
+        await user.save({ validateBeforeSave: false });
+
+        const options = {
+            httpOnly: true,
+            secure: true,
+        }
+
+        return res.status(200).json(
+            new ApiResponse(
+                200,
+                "Login successful",
+                user
+            )
+        ).cookie("refreshToken", refreshToken, options).cookie("accessToken", accessToken, options);
+
+    } catch (error) {
+        throw new ApiError(error.message || "Something went wrong", error.statusCode || 500);
+
     }
 });
 
