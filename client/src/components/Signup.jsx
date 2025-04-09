@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { NavLink } from 'react-router';
 
 const SignUpForm = () => {
   const [formData, setFormData] = useState({
@@ -236,9 +237,9 @@ const SignUpForm = () => {
           
           <p className="mt-6 text-center text-sm text-gray-600">
             Already have an account?{' '}
-            <a href="#" className="font-medium text-indigo-600 hover:text-indigo-500">
+            <NavLink to={`/signin`} className="font-medium text-indigo-600 hover:text-indigo-500">
               Sign in
-            </a>
+            </NavLink>
           </p>
         </div>
       </div>

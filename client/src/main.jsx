@@ -9,11 +9,22 @@ import SignInForm from "./components/Signin.jsx";
 const router = createBrowserRouter([
   {
     path: "/",
-    Component: <App />,
+    element: <App />,
     children: [
-      { index: true, Component: SignIn },
-      { path: "login", Component: <SignInForm /> },
-      { path: "signup", Component: <SignUpForm /> },
+      {
+        path: "/",
+        element: <App />,
+      },
+    ],
+  },
+  {
+    path: "/signin",
+    element: <SignInForm />,
+    children: [
+      // {
+      //   path: "/signin",
+      //   element: <SignInForm />,
+      // },
     ],
   },
 ]);
