@@ -185,4 +185,44 @@ const login = asyncHandler(async (req, res) => {
     }
 });
 
-export { register, verifyAccount, login };
+
+const refreshAccessToken = asyncHandler(async (req, res) => {
+    const incommingToken = req.cookies.refreshToken || req.headers["x-refresh-token"].split("Bearer ")[1] || req.body.refreshToken || req.query.refreshToken;
+
+    if (!incommingToken) {
+        throw new ApiError(401, "Refresh token is required");
+    }
+
+    const decoded = jwt.verify(incommingToken, process.env.JWT_REFRESH_TOKEN_SECRET);
+    if (!decoded) {
+        throw new ApiError(401, "Invalid refresh token");
+    }
+
+    const user = await User.findOne({ _id: decoded.id });
+    if (!user) {
+        throw new ApiError(404, "User not found");
+    }
+
+    if (user.refreshToken !== incommingToken) {
+        throw new ApiError(401, "Invalid refresh token");
+    }
+
+    const { accessToken, refreshToken } = await genrateAccessAndRefreshToken(user._id);
+    if (!accessToken || !refreshToken) {
+        throw new ApiError(500, "Failed to generate tokens");
+    }
+    user.accessToken = accessToken;
+    user.refreshToken = refreshToken;
+    await user.save({ validateBeforeSave: false });
+
+    const options = {
+        httpOnly: true,
+        secure: true,
+    }
+    res.cookie("refreshToken", refreshToken, options)
+    res.cookie("accessToken", accessToken, options)
+
+    return apiResponse(res, { statusCode: 200, data: user, message: "Token refreshed successfully" }, accessToken, refreshToken);
+});
+
+export { register, verifyAccount, login, refreshAccessToken };
