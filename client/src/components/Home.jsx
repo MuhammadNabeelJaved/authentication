@@ -8,7 +8,7 @@ const HomePage = () => {
     name: "Ahmed Khan",
     email: "ahmed.khan@example.com",
     title: "Senior Software Developer",
-    imageUrl: "/api/placeholder/200/200", // Using placeholder image
+    imageUrl: "https://mighty.tools/mockmind-api/content/cartoon/14.jpg", // Using placeholder image
   };
 
   return (
