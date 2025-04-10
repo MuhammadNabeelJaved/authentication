@@ -1,3 +1,4 @@
+import React, { useContext } from "react";
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import "./index.css";
@@ -6,6 +7,10 @@ import { createBrowserRouter, RouterProvider } from "react-router";
 import SignUpForm from "./components/Signup.jsx";
 import SignInForm from "./components/Signin.jsx";
 import HomePage from "./components/Home.jsx";
+import { AuthContext } from "./components/AuthContext.jsx";
+import { AuthProvider } from "./components/AuthContext.jsx";
+import { useAuth } from "./components/AuthContext.jsx";
+import ProtectedRoute from "./components/ProtectedRoutes.jsx";
 
 const router = createBrowserRouter([
   {
@@ -40,7 +45,7 @@ const router = createBrowserRouter([
   },
   {
     path: "/home",
-    element: <HomePage />,
+    element: <ProtectedRoute element={<HomePage />} />,
     children: [
       // {
       //   path: "/signin",
@@ -52,6 +57,8 @@ const router = createBrowserRouter([
 
 createRoot(document.getElementById("root")).render(
   <StrictMode>
-    <RouterProvider router={router} />
+    <AuthProvider>
+      <RouterProvider router={router} />
+    </AuthProvider>
   </StrictMode>
 );

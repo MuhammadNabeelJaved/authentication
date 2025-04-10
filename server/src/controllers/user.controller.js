@@ -47,7 +47,7 @@ const register = asyncHandler(async (req, res) => {
 
         // Check if user already exists
         const existingUser = await User.findOne({
-            $or: [{ email }, { username }],
+            $or: [{ email }],
         });
 
         if (existingUser) {

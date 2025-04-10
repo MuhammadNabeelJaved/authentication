@@ -10,7 +10,7 @@ const app = express();
 
 
 app.use(cors({
-    origin: process.env.CLIENT_URL,
+    origin: process.env.CORS_ORIGIN,
     credentials: true,
 }));
 app.use(bodyParser.json());
@@ -24,6 +24,6 @@ import userRouter from "./routes/user.route.js";
 
 app.use("/api/v1/users", userRouter)
 
-// app.use(errorHandler)
+app.use(errorHandler)
 
 export default app;
