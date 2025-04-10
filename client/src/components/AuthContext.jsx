@@ -6,7 +6,7 @@ const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
   console.log("User ki details", user);
@@ -14,17 +14,18 @@ export const AuthProvider = ({ children }) => {
   useEffect(() => {
     const accessToken = localStorage.getItem("accessToken");
     const refreshToken = localStorage.getItem("refreshToken");
-  
+
     console.log("Client Access Token:", accessToken);
     console.log("Client Refresh Token:", refreshToken);
-  
+
     if (!(accessToken && refreshToken)) {
       console.log("No tokens found");
       return;
     }
-  
+
     const isLoggedIn = async () => {
       try {
+        setLoading(true);
         const response = await axios.post(
           `http://localhost:3000/api/v1/users/refresh-token`,
           { refreshToken }
@@ -36,10 +37,9 @@ export const AuthProvider = ({ children }) => {
         console.log("Error in useEffect", error);
       }
     };
-  
+
     isLoggedIn();
   }, []);
-  
 
   const register = async (username, email, password) => {
     try {
@@ -71,7 +71,7 @@ export const AuthProvider = ({ children }) => {
           password,
         }
       );
-      
+
       setUser(response);
       console.log("SignIn Response", response.data?.data);
       localStorage.setItem("accessToken", response.data?.data?.accessToken);

@@ -8,9 +8,10 @@ import cookieParser from 'cookie-parser';
 dotenv.config();
 const app = express();
 
+const CORS_ORIGIN = process.env.CORS_ORIGIN || "http://localhost:5174";
 
 app.use(cors({
-    origin: process.env.CORS_ORIGIN,
+    origin: CORS_ORIGIN,
     credentials: true,
 }));
 app.use(bodyParser.json());
