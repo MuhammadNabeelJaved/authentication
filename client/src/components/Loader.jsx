@@ -3,7 +3,7 @@ import React from "react";
 
 const Loader = () => {
   return (
-    <div className="loader">
+    <div className="loader w-full h-full flex justify-center items-center">
       <svg
         className="animate-spin h-10 w-10 text-indigo-600"
         xmlns="http://www.w3.org/2000/svg"

@@ -1,6 +1,7 @@
 // AuthContext.jsx
 import React, { createContext, useState, useContext, useEffect } from "react";
 import axios from "axios";
+import Loader from "./Loader"; // Import the Loader component
 
 const AuthContext = createContext();
 
@@ -35,6 +36,7 @@ export const AuthProvider = ({ children }) => {
         setLoading(false);
       } catch (error) {
         console.log("Error in useEffect", error);
+        setLoading(false);
       }
     };
 
@@ -43,6 +45,7 @@ export const AuthProvider = ({ children }) => {
 
   const register = async (username, email, password) => {
     try {
+      setLoading(true);
       const response = await axios.post(
         `http://localhost:3000/api/v1/users/signup`,
         {
@@ -55,15 +58,16 @@ export const AuthProvider = ({ children }) => {
         throw new Error("Invalid response from server");
       }
       console.log("Register Response", response);
-      // setUser(response.data?.data);
       setLoading(false);
     } catch (error) {
       setError(error.response?.data);
+      setLoading(false);
     }
   };
 
   const signIn = async (email, password) => {
     try {
+      setLoading(true);
       const response = await axios.post(
         `http://localhost:3000/api/v1/users/login`,
         {
@@ -80,6 +84,7 @@ export const AuthProvider = ({ children }) => {
     } catch (error) {
       setError(error.response?.data);
       console.log("SignIn Error", error.response?.data);
+      setLoading(false);
     }
   };
 
@@ -102,7 +107,11 @@ export const AuthProvider = ({ children }) => {
     error,
   };
 
-  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+  return (
+    <AuthContext.Provider value={value}>
+      {loading ? <Loader /> : children}
+    </AuthContext.Provider>
+  );
 };
 
 export const useAuth = () => {
