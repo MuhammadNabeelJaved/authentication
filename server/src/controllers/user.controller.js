@@ -152,6 +152,8 @@ const login = asyncHandler(async (req, res) => {
             throw new ApiError(404, "User not found");
         }
 
+        console.log("User found:", user);
+
         const isMatch = await user.comparePassword(password);
 
         if (!isMatch) {
@@ -171,6 +173,11 @@ const login = asyncHandler(async (req, res) => {
 
         await user.save({ validateBeforeSave: false });
 
+        const newUser = await User.findOne({ _id: user._id }).select("-password -verificationCode -refreshToken -verificationCodeExpiry");
+        if (!newUser) {
+            throw new ApiError(500, "Failed to find user");
+        }
+
         const options = {
             httpOnly: true,
             secure: true,
@@ -178,7 +185,7 @@ const login = asyncHandler(async (req, res) => {
         res.cookie("refreshToken", refreshToken, options)
         res.cookie("accessToken", accessToken, options)
 
-        return apiResponse(res, { statusCode: 200, data: user, message: "Login successfully" }, accessToken, refreshToken);
+        return apiResponse(res, { statusCode: 200, data: { newUser, accessToken, refreshToken }, message: "Login successfully" }, accessToken, refreshToken);
 
     } catch (error) {
         throw new ApiError(error.statusCode || 500, error.message || "Something went wrong");
@@ -187,44 +194,44 @@ const login = asyncHandler(async (req, res) => {
 
 
 const refreshAccessToken = asyncHandler(async (req, res) => {
-    const incommingToken = req.cookies.refreshToken || req.headers["x-refresh-token"].split("Bearer ")[1] || req.body.refreshToken || req.query.refreshToken;
-
-    console.log("Incomming token:", incommingToken);
-
-    if (!incommingToken) {
-        throw new ApiError(401, "Refresh token is required");
+    const incomingToken = req.cookies.refreshToken || req.headers["x-refresh-token"] || req.body.refreshToken || req.query.refreshToken;
+  
+    console.log("Incoming token:", incomingToken);
+  
+    if (!incomingToken) {
+      throw new ApiError(401, "Refresh token is required");
     }
-
-    const decoded = jwt.verify(incommingToken, process.env.JWT_REFRESH_TOKEN_SECRET);
+  
+    const decoded = jwt.verify(incomingToken, process.env.JWT_REFRESH_TOKEN_SECRET);
     if (!decoded) {
-        throw new ApiError(401, "Invalid refresh token");
+      throw new ApiError(401, "Invalid refresh token 1");
     }
-
+  
     const user = await User.findOne({ _id: decoded.id });
     if (!user) {
-        throw new ApiError(404, "User not found");
+      throw new ApiError(404, "User not found");
     }
-
-    if (user.refreshToken !== incommingToken) {
-        throw new ApiError(401, "Invalid refresh token");
-    }
-
+  
+    console.log("User found:", user);
+  
+    // if (user.refreshToken !== incomingToken) {
+    //   throw new ApiError(401, "Invalid refresh token 2");
+    // }
+  
     const { accessToken, refreshToken } = await genrateAccessAndRefreshToken(user._id);
     if (!accessToken || !refreshToken) {
-        throw new ApiError(500, "Failed to generate tokens");
+      throw new ApiError(500, "Failed to generate tokens");
     }
-    user.accessToken = accessToken;
-    user.refreshToken = refreshToken;
-    await user.save({ validateBeforeSave: false });
-
+  
     const options = {
-        httpOnly: true,
-        secure: true,
-    }
-    res.cookie("refreshToken", refreshToken, options)
-    res.cookie("accessToken", accessToken, options)
-
+      httpOnly: true,
+      secure: true,
+    };
+    res.cookie("refreshToken", refreshToken, options);
+    res.cookie("accessToken", accessToken, options);
+  
     return apiResponse(res, { statusCode: 200, data: user, message: "Token refreshed successfully" }, accessToken, refreshToken);
-});
+  });
+  
 
 export { register, verifyAccount, login, refreshAccessToken };

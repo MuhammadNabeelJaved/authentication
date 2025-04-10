@@ -1,5 +1,6 @@
 import React, { useState } from "react";
-import { NavLink } from "react-router";
+import { NavLink,useNavigate } from "react-router";
+import { useAuth } from "./AuthContext.jsx";
 
 const SignInForm = () => {
   const [formData, setFormData] = useState({
@@ -8,6 +9,13 @@ const SignInForm = () => {
   });
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
+
+  const { signIn,user } = useAuth();
+  const navigate = useNavigate();
+
+  if(user){
+    navigate("/home")
+  }
 
   const validateForm = () => {
     const newErrors = {};
@@ -44,6 +52,7 @@ const SignInForm = () => {
       setLoading(true);
       // Simulate API call
       setTimeout(() => {
+        signIn(formData.email, formData.password)
         console.log("Form submitted successfully", formData);
         setLoading(false);
       }, 1500);

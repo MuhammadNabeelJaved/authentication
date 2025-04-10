@@ -8,6 +8,6 @@ const router = Router()
 router.route("/signup").post(register)
 router.route("/verify-account").post(verifyAccount)
 router.route("/login").post(login)
-router.route("/refresh-token").post(verifyToken, refreshAccessToken)
+router.route("/refresh-token").post(refreshAccessToken)
 
 export default router
