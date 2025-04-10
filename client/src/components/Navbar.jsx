@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 
-const Navbar = ({ user }) => {
+const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isProfileDropdownOpen, setIsProfileDropdownOpen] = useState(false);
 
@@ -16,6 +16,12 @@ const Navbar = ({ user }) => {
     if (isMenuOpen) {
       setIsMenuOpen(false);
     }
+  };
+
+  const user = {
+    name: 'John Doe',
+    email: '9Hs2w@example.com',
+    imageUrl: 'https://mighty.tools/mockmind-api/content/cartoon/14.jpg', // Placeholder image
   };
 
   // Navigation menu items

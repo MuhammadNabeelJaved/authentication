@@ -13,8 +13,6 @@ const HomePage = () => {
 
   return (
     <div className="min-h-screen flex flex-col">
-      <Navbar user={user} />
-
       <main className="flex-grow bg-gray-50">
         {/* Hero section with user profile */}
         <div className="bg-white shadow">
@@ -209,7 +207,6 @@ const HomePage = () => {
           </div>
         </div>
       </main>
-      <Footer />
     </div>
   );
 };

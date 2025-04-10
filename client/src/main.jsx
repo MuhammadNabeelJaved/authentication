@@ -1,56 +1,42 @@
-import React, { useContext } from "react";
+// main.jsx
+import React from "react";
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import "./index.css";
-import App from "./App.jsx";
 import { createBrowserRouter, RouterProvider } from "react-router";
 import SignUpForm from "./components/Signup.jsx";
 import SignInForm from "./components/Signin.jsx";
 import HomePage from "./components/Home.jsx";
-import { AuthContext } from "./components/AuthContext.jsx";
+import OTPVerification from "./components/Otp.jsx";
 import { AuthProvider } from "./components/AuthContext.jsx";
-import { useAuth } from "./components/AuthContext.jsx";
 import ProtectedRoute from "./components/ProtectedRoutes.jsx";
+import App from "./App.jsx"; // Import the App component
 
 const router = createBrowserRouter([
   {
     path: "/",
-    element: <SignUpForm />,
+    element: <App />, // Use App as the layout component
     children: [
       {
         path: "/",
         element: <SignUpForm />,
       },
-    ],
-  },
-  {
-    path: "/signin",
-    element: <SignInForm />,
-    children: [
-      // {
-      //   path: "/signin",
-      //   element: <SignInForm />,
-      // },
-    ],
-  },
-  {
-    path: "/signup",
-    element: <SignUpForm />,
-    children: [
-      // {
-      //   path: "/signin",
-      //   element: <SignInForm />,
-      // },
-    ],
-  },
-  {
-    path: "/home",
-    element: <ProtectedRoute element={<HomePage />} />,
-    children: [
-      // {
-      //   path: "/signin",
-      //   element: <SignInForm />,
-      // },
+      {
+        path: "/signin",
+        element: <SignInForm />,
+      },
+      {
+        path: "/signup",
+        element: <SignUpForm />,
+      },
+      {
+        path: "/home",
+        element: <ProtectedRoute element={<HomePage />} />,
+      },
+      {
+        path: "/verify-account",
+        element: <OTPVerification />,
+      },
     ],
   },
 ]);
